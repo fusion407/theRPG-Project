@@ -1,6 +1,7 @@
 import pygame, sys
 from sprites import *
 from config import *
+from PlayerInteract import *
 
 
 class Game:
@@ -15,7 +16,12 @@ class Game:
         self.character_spritesheet = Spritesheet('img/character.png')
         self.terrain_spritesheet = Spritesheet('img/terrain.png')
         self.enemy_spritesheet = Spritesheet('img/enemy.png')
+        self.attack_spritesheet = Spritesheet('img/attack.png')
+        self.treasure_spritesheet = Spritesheet('img/treasure.png')
+
+        # importing intro / game over background images
         self.intro_background = pygame.image.load('./img/9.png')
+        self.go_background = pygame.image.load('./img/gameover.png')
     
     def createTilemap(self):
         for i, row in enumerate(tilemap):
@@ -26,7 +32,9 @@ class Game:
                 if column == "E":
                     Enemy(self, j, i)
                 if column == "P":
-                    Player(self, j, i)
+                    self.player = Player(self, j, i)
+                if column == "I":
+                    self.treasure = Treasure(self, j, i)
                     
     def new(self):
         # a new game starts
@@ -34,6 +42,7 @@ class Game:
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
+        self.treasures = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
 
@@ -45,6 +54,25 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if self.player.facing == 'up':
+                        Attack(self, self.player.rect.x, self.player.rect.y - TILESIZE)
+                    if self.player.facing == 'down':
+                        Attack(self, self.player.rect.x, self.player.rect.y + TILESIZE)
+                    if self.player.facing == 'left':
+                        Attack(self, self.player.rect.x - TILESIZE, self.player.rect.y)
+                    if self.player.facing == 'right':
+                        Attack(self, self.player.rect.x + TILESIZE, self.player.rect.y)
+                if event.key == pygame.K_e:
+                    # handles whether treasure chest is opened, and adds item
+                    # todo: every chest is affected, make each treasure object its own unique boolean
+                    if self.player.interactable == True and self.treasure.bOpened == False:
+                        Treasure.open_treasure(self)
+                        Item.add_to_inventory(self)
+                        
+                        
+                            
 
     def update(self):
         # game loop updates
@@ -62,18 +90,42 @@ class Game:
             self.events()
             self.update()
             self.draw()
-        self.running = False
 
     def game_over(self):
-        pass
+        text = self.font.render('Game Over', True, WHITE)
+        text_rect = text.get_rect(center=(WIN_WIDTH/2, WIN_HEIGHT/2))
+
+        restart_button = Button(10, WIN_HEIGHT - 60, 120, 50, WHITE, BLACK, 'Restart', 15)
+
+        for sprite in self.all_sprites:
+            sprite.kill()
+
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_pressed = pygame.mouse.get_pressed()
+
+            if restart_button.is_pressed(mouse_pos, mouse_pressed):
+                self.new()
+                self.main()
+
+            self.screen.blit(self.go_background, (0,0))
+            self.screen.blit(text, text_rect)
+            self.screen.blit(restart_button.image, restart_button.rect)
+            self.clock.tick(FPS)
+            pygame.display.update()
+
     
     def intro_screen(self):
         intro = True
 
         title = self.font.render('RPG Project', True, WHITE)
-        title_rect = title.get_rect(x=180, y=10)
+        title_rect = title.get_rect(x=180, y=60)
 
-        play_button = Button(250, 80, 100, 50, WHITE, BLACK, 'Play', 32)
+        play_button = Button(280, 120, 100, 50, WHITE, BLACK, 'Play', 32)
 
         while intro:
             for event in pygame.event.get():
