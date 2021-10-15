@@ -1,6 +1,6 @@
 import pygame
 from config import *
-from PlayerInteract import *
+from PlayerEvents import *
 import math, random
 
 
@@ -30,6 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
         self.facing = 'down'
+        self.isInvOpen = False
         self.animation_loop = 1
         self.interactable = False
 
@@ -58,8 +59,10 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.movement()
+        self.showInventory()
         self.animate()
         self.collide_enemy()
+        self.collide_NPC()
         self.collide_treasure()
 
         self.rect.x += self.x_change
@@ -92,12 +95,21 @@ class Player(pygame.sprite.Sprite):
                 sprite.rect.y -= PLAYER_SPEED
             self.y_change += PLAYER_SPEED
             self.facing = 'down'
-
+    
+    def showInventory(self):
+        pass
     def collide_enemy(self):
         hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if hits:
             self.kill()
             self.game.playing = False
+    
+    def collide_NPC(self):
+        hits = pygame.sprite.spritecollide(self, self.game.npcs, False)
+        if hits:
+            self.interactable = True
+        else:
+            self.interactable = False
 
     def collide_treasure(self):
         hits = pygame.sprite.spritecollide(self, self.game.treasures, False)
@@ -105,7 +117,6 @@ class Player(pygame.sprite.Sprite):
             self.interactable = True
         else:
             self.interactable = False
-
 
     def collide_blocks(self, direction):
         if direction == "x":
@@ -166,6 +177,28 @@ class Player(pygame.sprite.Sprite):
                 self.animation_loop += 0.1
                 if self.animation_loop >= 3:
                     self.animation_loop = 1
+
+class NPC(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = NPC_LAYER
+        self.groups = self.game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.width = TILESIZE
+        self.height = TILESIZE
+
+        self.x_change = 0
+        self.y_change = 0
+
+        self.interactable = False
+
+        self.image = self.game.npc_spritesheet.get_sprite(3, 2, self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -323,13 +356,16 @@ class Treasure(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-        self.bOpened = False
+        self.isOpen = False
 
+    def update(self):
+        if self.isOpen == True:
+            pygame.sprite.Sprite.kill(self)
     def open_treasure(self):
         print("opened!")
-        # kill sprite
-        
-
+        # kill sprite and make new uninteractable sprite
+        self.isOpen = True
+        return
 
 class Button:
 

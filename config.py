@@ -3,7 +3,8 @@ WIN_HEIGHT = 480
 TILESIZE = 32
 FPS = 60
 
-PLAYER_LAYER = 5
+PLAYER_LAYER = 6
+NPC_LAYER = 5
 ENEMY_LAYER = 4
 TREASURE_LAYER = 3
 BLOCK_LAYER = 2
@@ -20,7 +21,7 @@ WHITE = (255, 255, 255)
 tilemap = [
     'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
     'B..................B.........B..........................B',
-    'B..I...............B.........B......................I...B',
+    'B..I..........N....B.........B......................I...B',
     'B..................BBBBBBBBBBB.............E............B',
     'BBBBBBB............B.........B..........................B',
     'B..................B.........B..........................B',

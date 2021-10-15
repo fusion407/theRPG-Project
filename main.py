@@ -1,7 +1,7 @@
 import pygame, sys
 from sprites import *
 from config import *
-from PlayerInteract import *
+from PlayerEvents import *
 
 
 class Game:
@@ -16,13 +16,16 @@ class Game:
         self.character_spritesheet = Spritesheet('img/character.png')
         self.terrain_spritesheet = Spritesheet('img/terrain.png')
         self.enemy_spritesheet = Spritesheet('img/enemy.png')
+        self.npc_spritesheet = Spritesheet('img/npc-sprites.png')
         self.attack_spritesheet = Spritesheet('img/attack.png')
         self.treasure_spritesheet = Spritesheet('img/treasure.png')
 
         # importing intro / game over background images
         self.intro_background = pygame.image.load('./img/9.png')
         self.go_background = pygame.image.load('./img/gameover.png')
-    
+        self.inventory_background = pygame.image.load('./img/inventory_background.png')
+
+        self.isInvOpen = False
     def createTilemap(self):
         for i, row in enumerate(tilemap):
             for j, column in enumerate(row):
@@ -33,6 +36,8 @@ class Game:
                     Enemy(self, j, i)
                 if column == "P":
                     self.player = Player(self, j, i)
+                if column == "N":
+                    self.npc = NPC(self, j, i)
                 if column == "I":
                     self.treasure = Treasure(self, j, i)
                     
@@ -44,6 +49,7 @@ class Game:
         self.blocks = pygame.sprite.LayeredUpdates()
         self.treasures = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
+        self.npcs = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
 
         self.createTilemap()
@@ -67,9 +73,17 @@ class Game:
                 if event.key == pygame.K_e:
                     # handles whether treasure chest is opened, and adds item
                     # todo: every chest is affected, make each treasure object its own unique boolean
-                    if self.player.interactable == True and self.treasure.bOpened == False:
-                        Treasure.open_treasure(self)
-                        Item.add_to_inventory(self)
+                    Interact(self)
+                if event.key == pygame.K_TAB:
+                    if self.player.isInvOpen == False:
+                        Inventory(10, WIN_HEIGHT - 60, 120, 50, WHITE, BLACK, 'Restart', 15)
+                        Inventory.openInventory(self)
+                        self.player.isInvOpen = True
+                    else:
+                        Inventory.closeInventory(self)
+                        self.player.isInvOpen = False
+                        
+                    
                         
                         
                             
